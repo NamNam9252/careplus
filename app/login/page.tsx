@@ -1,13 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
-import { X } from "lucide-react";
+import { X, User, Stethoscope } from "lucide-react";
 
 export default function LoginPage() {
+  const [role, setRole] = useState<"patient" | "doctor">("patient");
+
+  const handleSignIn = async () => {
+    if (role === "doctor") {
+      // Use default /api/auth
+      signIn("google", { callbackUrl: "/doctor/dashboard" });
+    } else {
+      // Use /api/patient/auth
+      // We need to perform a POST with CSRF token to isolate correctly
+      try {
+        const res = await fetch("/api/patient/auth/csrf");
+        const { csrfToken } = await res.json();
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/api/patient/auth/signin/google";
+
+        const csrfInput = document.createElement("input");
+        csrfInput.type = "hidden";
+        csrfInput.name = "csrfToken";
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        const callbackInput = document.createElement("input");
+        callbackInput.type = "hidden";
+        callbackInput.name = "callbackUrl";
+        callbackInput.value = "/";
+        form.appendChild(callbackInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      } catch (error) {
+        console.error("Patient sign-in error:", error);
+      }
+    }
+  };
+
   return (
     <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-black/50 backdrop-blur-xl p-4">
       {/* Backdrop Blur Background */}
@@ -66,16 +103,40 @@ export default function LoginPage() {
             {/* Heading */}
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">
-                Sign In or Sign Up
+                Sign In
               </h1>
-              <p className="text-sm text-gray-500 mt-2">
-                Continue to easily book doctor's appointments online.
+              <p className="text-sm text-gray-400 mt-1">
+                Select your role to continue
               </p>
+            </div>
+
+            {/* Role Selector Tabs */}
+            <div className="flex p-1 bg-gray-100 rounded-xl mb-8">
+              <button
+                onClick={() => setRole("patient")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${role === "patient"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
+              >
+                <User className="h-4 w-4" />
+                Patient
+              </button>
+              <button
+                onClick={() => setRole("doctor")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${role === "doctor"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
+              >
+                <Stethoscope className="h-4 w-4" />
+                Doctor
+              </button>
             </div>
 
             {/* Google Sign In Button */}
             <motion.button
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={handleSignIn}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
@@ -103,7 +164,7 @@ export default function LoginPage() {
                   d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.4-4.5 2.2-8.1 2.2-6.1 0-11.4-3.9-13.3-9.4l-8.1 6.3C6.5 42.6 14.6 48 24 48z"
                 />
               </svg>
-              Sign in with Google
+              Sign in as {role === "patient" ? "Patient" : "Doctor"}
             </motion.button>
 
             <p className="text-center text-xs text-gray-400 mt-4">

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/database/db";
-import Doctor from "@/lib/models/Doctor";
+import Patient from "@/lib/models/Patient";
 
 const handler = NextAuth({
     providers: [
@@ -32,42 +32,28 @@ const handler = NextAuth({
         async signIn({ user }) {
             await connectDB();
 
-            const existing = await Doctor.findOne({ email: user.email });
+            const existing = await Patient.findOne({ email: user.email });
 
             if (!existing) {
-                await Doctor.create({
+                await Patient.create({
                     name: user.name,
                     email: user.email,
-                    role: "doctor",
-                    isProfileComplete: false,
+                    role: "patient",
                 });
             }
 
             return true;
         },
 
-        async jwt({ token, user, trigger, session }) {
-            await connectDB();
-
+        async jwt({ token, user }) {
             if (user) {
-                const doctor = await Doctor.findOne({ email: user.email });
-                if (doctor) {
-                    token.id = doctor._id?.toString();
-                    token.email = doctor.email;
-                    token.name = doctor.name;
-                    token.role = doctor.role || "doctor";
-                    token.isProfileComplete = doctor.isProfileComplete;
-                    token.specializations = doctor.specializations || [];
-                    token.experience = doctor.experience || 0;
-                }
-            } else if (trigger === "update") {
-                // If update() is called, fetch the latest from DB to ensure sync
-                const doctor = await Doctor.findById(token.id);
-                if (doctor) {
-                    token.isProfileComplete = doctor.isProfileComplete;
-                    token.specializations = doctor.specializations || [];
-                    token.experience = doctor.experience || 0;
-                    token.name = doctor.name;
+                await connectDB();
+                const patient = await Patient.findOne({ email: user.email });
+                if (patient) {
+                    token.id = patient._id?.toString();
+                    token.email = patient.email;
+                    token.name = patient.name;
+                    token.role = patient.role || "patient";
                 }
             }
             return token;
@@ -79,19 +65,14 @@ const handler = NextAuth({
                 session.user.email = token.email;
                 session.user.name = token.name;
                 session.user.role = token.role;
-                session.user.isProfileComplete = token.isProfileComplete;
-                (session.user as any).specializations = token.specializations;
-                (session.user as any).experience = token.experience;
             }
             return session;
         },
 
         async redirect({ url, baseUrl }) {
-            // After sign in, check if we need to redirect to profile completion
             if (url.startsWith(baseUrl)) {
                 return url;
             }
-            // Default redirect to base URL (middleware will handle the rest)
             return baseUrl;
         },
     },
@@ -103,7 +84,7 @@ const handler = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
     cookies: {
         sessionToken: {
-            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-token`,
+            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-token`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",
@@ -113,7 +94,7 @@ const handler = NextAuth({
             },
         },
         callbackUrl: {
-            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-callback-url`,
+            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-callback-url`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",
@@ -122,7 +103,7 @@ const handler = NextAuth({
             },
         },
         csrfToken: {
-            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-csrf-token`,
+            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-csrf-token`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",
@@ -131,7 +112,7 @@ const handler = NextAuth({
             },
         },
         pkceCodeVerifier: {
-            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-pkce-verifier`,
+            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-pkce-verifier`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",
@@ -141,7 +122,7 @@ const handler = NextAuth({
             },
         },
         state: {
-            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-state`,
+            name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-state`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",

@@ -16,11 +16,21 @@ export async function middleware(req: NextRequest) {
     // STEP 1: Get the authentication token
     // ============================================
     // This retrieves the JWT token from the request cookies
-    // The token contains user information like: id, email, role, isProfileComplete, etc.
-    const token = await getToken({
+    // We check for both doctor and patient tokens
+    const doctorToken = await getToken({
         req,
         secret: process.env.NEXTAUTH_SECRET,
+        cookieName: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.doctor-token`,
     });
+
+    const patientToken = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+        cookieName: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.patient-token`,
+    });
+
+    // Use whichever token is available (prioritize doctor if both exist for some reason)
+    const token = doctorToken || patientToken;
 
     // Get the current pathname (e.g., "/login", "/doctor/profile", etc.)
     const { pathname } = req.nextUrl;
@@ -29,7 +39,7 @@ export async function middleware(req: NextRequest) {
     // STEP 2: Define route types
     // ============================================
     // These routes don't require authentication - anyone can access them
-    const publicRoutes = ["/login", "/api/auth"];
+    const publicRoutes = ["/login", "/api/auth", "/api/patient/auth", "/patient-test"];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     // Check if the current request is for an API route
@@ -87,13 +97,13 @@ export async function middleware(req: NextRequest) {
         }
 
         // --------------------------------------------
-        // 4C: Profile complete - block profile page access
+        // 4C: Profile complete - allow profile page access for editing
         // --------------------------------------------
-        // If profile IS complete and user tries to access the profile page,
-        // redirect them to dashboard (no need to complete profile again)
+        // We previously blocked this, but doctors need to access it to edit their info.
+        // So we just allow it to continue.
         if (token.isProfileComplete && pathname.startsWith("/doctor/profile")) {
-            console.log(`✅ Profile already complete. Redirecting to /doctor/dashboard`);
-            return NextResponse.redirect(new URL("/doctor/dashboard", req.url));
+            console.log(`✅ Profile complete. Allowing access to ${pathname} for editing.`);
+            return NextResponse.next();
         }
     }
 

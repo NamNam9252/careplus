@@ -36,8 +36,28 @@ export default function DoctorProfilePage() {
       router.push("/login");
     } else if (status === "authenticated") {
       fetchClinics();
+      fetchDoctorProfile();
     }
   }, [status, router]);
+
+  const fetchDoctorProfile = async () => {
+    try {
+      const res = await fetch(`/api/v1/doctor/profile?id=${session?.user?.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.doctor) {
+          setFormData({
+            experience: data.doctor.experience?.toString() || "",
+            specializations: data.doctor.specializations?.length > 0
+              ? data.doctor.specializations
+              : [""],
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching doctor profile:", err);
+    }
+  };
 
   const fetchClinics = async () => {
     try {
@@ -251,8 +271,8 @@ export default function DoctorProfilePage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Complete Your Profile</h1>
-            <p className="mt-2 text-gray-600">Add your experience and specializations to get started</p>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Manage Your Profile</h1>
+            <p className="mt-2 text-gray-500 font-medium">Keep your professional information and clinics up to date</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -279,8 +299,8 @@ export default function DoctorProfilePage() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{session?.user?.name}</h2>
               <p className="text-sm text-gray-600">{session?.user?.email}</p>
-              <p className="text-xs text-teal-600 font-semibold uppercase tracking-wider mt-1">
-                {session?.user?.role}
+              <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+                Verified Specialist {session?.user?.role}
               </p>
             </div>
           </div>
@@ -392,9 +412,9 @@ export default function DoctorProfilePage() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm shadow-xl shadow-blue-100 hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Saving..." : "Update Doctor Information"}
+              {loading ? "Saving Changes..." : "Save Professional Profile"}
             </motion.button>
           </form>
 
