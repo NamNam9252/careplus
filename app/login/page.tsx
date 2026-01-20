@@ -4,65 +4,82 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { signIn } from "next-auth/react";
+import { X } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gray-50 p-4 md:p-8">
-      {/* Floating Card Container */}
+    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-black/50 backdrop-blur-xl p-4">
+      {/* Backdrop Blur Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-black/60 to-gray-900/80 backdrop-blur-2xl" />
+      
+      {/* Popup Modal */}
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 flex w-full max-w-5xl overflow-hidden rounded-[30px] bg-white shadow-2xl shadow-teal-900/10 ring-1 ring-black/5 lg:flex-row flex-col min-h-[600px]"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md"
       >
-        {/* Left Side */}
-        <div className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-16 xl:px-20 bg-white">
-          <div className="mx-auto w-full max-w-sm">
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-8 flex items-center gap-3"
+        {/* Close Button - Top Right */}
+        <Link href="/">
+          <button className="absolute -top-3 -right-3 z-20 h-8 w-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors shadow-lg">
+            <X className="h-4 w-4 text-gray-600" />
+          </button>
+        </Link>
+
+        {/* Modal Card */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+          {/* Top Wave Background with Logo */}
+          <div className="relative h-32 bg-gradient-to-br from-blue-100 via-blue-50 to-white overflow-hidden">
+            {/* Wave SVG Background */}
+            <svg
+              className="absolute bottom-0 w-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 120"
+              preserveAspectRatio="none"
             >
-              <div className="relative h-12 w-[160px]">
-                <Image
-                  src="/logo.png"
-                  alt="CarePlus Logo"
-                  fill
-                  className="object-contain object-left"
-                  priority
-                />
+              <path
+                fill="#ffffff"
+                fillOpacity="1"
+                d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"
+              ></path>
+            </svg>
+            
+            {/* Logo Circle */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg flex items-center justify-center">
+                <div className="relative h-12 w-12">
+                  <Image
+                    src="/logo.png"
+                    alt="CarePlus Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
               </div>
-            </motion.div>
+            </div>
+          </div>
 
+          {/* Content */}
+          <div className="px-8 pb-8 pt-4">
             {/* Heading */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="mb-10"
-            >
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome to CarePlus
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">
+                Sign In or Sign Up
               </h1>
-              <p className="mt-2 text-sm text-gray-500">
-                Sign in securely using your Google account.
+              <p className="text-sm text-gray-500 mt-2">
+                Continue to easily book doctor's appointments online.
               </p>
-            </motion.div>
+            </div>
 
-            {/* GOOGLE LOGIN ONLY */}
+            {/* Google Sign In Button */}
             <motion.button
-              onClick={() => signIn("google")}
+              onClick={() => signIn("google", { callbackUrl: "/" })}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
               type="button"
-              className="w-full h-11 rounded-lg border border-gray-200 bg-white text-gray-700 font-semibold text-sm shadow-sm hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full h-12 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium text-sm shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -86,57 +103,29 @@ export default function LoginPage() {
                   d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.4-4.5 2.2-8.1 2.2-6.1 0-11.4-3.9-13.3-9.4l-8.1 6.3C6.5 42.6 14.6 48 24 48z"
                 />
               </svg>
-              Continue with Google
+              Sign in with Google
             </motion.button>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="mt-8 text-center text-xs text-gray-400"
-            >
-              By continuing, you agree to CarePlus terms & privacy policy.
-            </motion.div>
-          </div>
-        </div>
+            <p className="text-center text-xs text-gray-400 mt-4">
+              We will sign you up if you&apos;re new.
+            </p>
 
-        {/* Right Side Visual */}
-        <div className="hidden lg:flex w-1/2 items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/medical_illustration.png"
-              alt="Medical Healthcare Illustration"
-              fill
-              className="object-cover opacity-90"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-emerald-500/20 mix-blend-multiply" />
-          </div>
-
-          <div className="relative z-10 max-w-md">
-            <div className="rounded-2xl border border-white bg-white/70 p-8 backdrop-blur-md shadow-xl shadow-teal-900/5">
-              <blockquote className="space-y-4">
-                <p className="text-lg font-medium leading-relaxed text-gray-800 italic">
-                  &ldquo;CarePlus helps doctors manage clinics and patients
-                  effortlessly.&rdquo;
-                </p>
-                <footer className="pt-4 border-t border-teal-100/50">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                      DR
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 text-sm">
-                        Verified Doctor
-                      </div>
-                      <div className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">
-                        CarePlus Platform
-                      </div>
-                    </div>
-                  </div>
-                </footer>
-              </blockquote>
+            {/* Terms and Privacy */}
+            <div className="mt-6 text-center text-xs text-gray-500">
+              By continuing, you agree to our{" "}
+              <Link href="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </Link>
             </div>
+
+            {/* Footer Note */}
+            <p className="text-center text-xs text-gray-400 mt-4">
+              One-click login with <span className="font-semibold">Google</span> – Fast, secure & hassle-free!
+            </p>
           </div>
         </div>
       </motion.div>
