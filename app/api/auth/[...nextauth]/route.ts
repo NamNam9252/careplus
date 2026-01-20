@@ -39,9 +39,10 @@ const handler = NextAuth({
             return true;
         },
 
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
+            await connectDB();
+
             if (user) {
-                await connectDB();
                 const doctor = await Doctor.findOne({ email: user.email });
                 if (doctor) {
                     token.id = doctor._id?.toString();
@@ -51,8 +52,23 @@ const handler = NextAuth({
                     token.isProfileComplete = doctor.isProfileComplete;
                     token.specializations = doctor.specializations || [];
                     token.experience = doctor.experience || 0;
+                    token.phone = doctor.phone || "";
+                    token.bio = doctor.bio || "";
                 }
             }
+
+            // Handle session update (e.g. after profile completion)
+            if (trigger === "update") {
+                const doctor = await Doctor.findOne({ email: token.email });
+                if (doctor) {
+                    token.isProfileComplete = doctor.isProfileComplete;
+                    token.specializations = doctor.specializations;
+                    token.experience = doctor.experience;
+                    token.phone = doctor.phone;
+                    token.bio = doctor.bio;
+                }
+            }
+
             return token;
         },
 
@@ -65,17 +81,19 @@ const handler = NextAuth({
                 session.user.isProfileComplete = token.isProfileComplete;
                 (session.user as any).specializations = token.specializations;
                 (session.user as any).experience = token.experience;
+                (session.user as any).phone = token.phone;
+                (session.user as any).bio = token.bio;
             }
             return session;
         },
 
         async redirect({ url, baseUrl }) {
-            // After sign in, check if we need to redirect to profile completion
+            // After sign in, redirect to doctor dashboard
+            // Middleware will redirect to /doctor/profile if profile is incomplete
             if (url.startsWith(baseUrl)) {
-                return url;
+                return baseUrl + "/doctor/dashboard";
             }
-            // Default redirect to base URL (middleware will handle the rest)
-            return baseUrl;
+            return baseUrl + "/doctor/dashboard";
         },
     },
 

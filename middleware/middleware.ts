@@ -15,8 +15,6 @@ export async function middleware(req: NextRequest) {
     // ============================================
     // STEP 1: Get the authentication token
     // ============================================
-    // This retrieves the JWT token from the request cookies
-    // The token contains user information like: id, email, role, isProfileComplete, etc.
     const token = await getToken({
         req,
         secret: process.env.NEXTAUTH_SECRET,
@@ -29,25 +27,29 @@ export async function middleware(req: NextRequest) {
     // STEP 2: Define route types
     // ============================================
     // These routes don't require authentication - anyone can access them
-    const publicRoutes = ["/login", "/api/auth"];
+    const publicRoutes = ["/", "/login", "/api/auth"];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     // Check if the current request is for an API route
     const isApiRoute = pathname.startsWith("/api");
 
+    // Check if trying to access doctor-specific routes
+    const isDoctorRoute = pathname.startsWith("/doctor");
+
     // ============================================
     // STEP 3: Handle unauthenticated users
     // ============================================
     // If no token exists (user not logged in) and they're trying to access a protected route
-    if (!token && !isPublicRoute) {
-        console.log(`🔴 No token found. Accessing ${pathname}`);
+    if (!token && isDoctorRoute) {
+        console.log(`🔴 No token found. Redirecting from ${pathname} to home`);
 
-        // For API routes, return a 401 Unauthorized instead of a redirect to /login
+        // For API routes, return a 401 Unauthorized instead of a redirect
         if (isApiRoute) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        return NextResponse.redirect(new URL("/login", req.url));
+        // Redirect to home page instead of login
+        return NextResponse.redirect(new URL("/", req.url));
     }
 
     // ============================================
@@ -56,8 +58,7 @@ export async function middleware(req: NextRequest) {
     if (token) {
         console.log(`✅ Token found for user: ${token.email}, Profile Complete: ${token.isProfileComplete}`);
 
-        // Skip redirection logic for API routes (except maybe login/auth if needed)
-        // API routes should proceed if authenticated
+        // Skip redirection logic for API routes
         if (isApiRoute) {
             return NextResponse.next();
         }
@@ -65,43 +66,30 @@ export async function middleware(req: NextRequest) {
         // --------------------------------------------
         // 4A: User trying to access login page
         // --------------------------------------------
-        // If already logged in, redirect based on profile completion status
+        // If already logged in and going to /login, redirect to dashboard
         if (pathname === "/login") {
-            if (token.isProfileComplete) {
-                console.log(`↪️ Profile complete. Redirecting to /doctor/dashboard`);
-                return NextResponse.redirect(new URL("/doctor/dashboard", req.url));
-            } else {
-                console.log(`↪️ Profile incomplete. Redirecting to /doctor/profile`);
-                return NextResponse.redirect(new URL("/doctor/profile", req.url));
-            }
+            console.log(`↪️ Already logged in. Redirecting to /doctor/dashboard`);
+            return NextResponse.redirect(new URL("/doctor/dashboard", req.url));
         }
 
         // --------------------------------------------
-        // 4B: Profile incomplete - force to profile page
+        // 4B: Profile incomplete - can only access dashboard and profile
+        // Other features (queue, consulting, clinics) require complete profile
         // --------------------------------------------
-        // If profile is NOT complete and user tries to access any protected route
-        // (except the profile page itself), redirect them to complete their profile first
-        if (!token.isProfileComplete && !pathname.startsWith("/doctor/profile") && !isPublicRoute) {
+        const protectedRoutes = ["/doctor/queue", "/doctor/consulting", "/doctor/clinics", "/doctor/settings"];
+        const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+        
+        if (!token.isProfileComplete && isProtectedRoute) {
             console.log(`⚠️ Profile incomplete. Redirecting to /doctor/profile from ${pathname}`);
             return NextResponse.redirect(new URL("/doctor/profile", req.url));
         }
 
-        // --------------------------------------------
-        // 4C: Profile complete - block profile page access
-        // --------------------------------------------
-        // If profile IS complete and user tries to access the profile page,
-        // redirect them to dashboard (no need to complete profile again)
-        if (token.isProfileComplete && pathname.startsWith("/doctor/profile")) {
-            console.log(`✅ Profile already complete. Redirecting to /doctor/dashboard`);
-            return NextResponse.redirect(new URL("/doctor/dashboard", req.url));
-        }
+        // Note: Profile page is always accessible so doctors can edit their profile
     }
 
     // ============================================
     // STEP 5: Allow the request to continue
     // ============================================
-    // If none of the above conditions triggered a redirect, allow the request to proceed normally
     console.log(`✅ Allowing access to ${pathname}`);
     return NextResponse.next();
 }
-

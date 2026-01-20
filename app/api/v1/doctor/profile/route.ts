@@ -22,13 +22,15 @@ export async function PUT(req: NextRequest) {
             );
         }
 
-        const { doctorId, experience, specializations } = validation.data;
+        const { doctorId, experience, specializations, phone, bio } = validation.data;
 
         const updatedDoctor = await Doctor.findByIdAndUpdate(
             doctorId,
             {
                 experience,
                 specializations,
+                phone: phone || "",
+                bio: bio || "",
                 isProfileComplete: true,
             },
             { new: true }

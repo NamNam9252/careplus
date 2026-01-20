@@ -39,7 +39,7 @@ export default function ClientHero() {
           quality={100}
         />
         {/* Overlay for better text readability if needed */}
-        <div className="absolute inset-0 bg-transparent" />
+        <div className="absolute inset-0" />
       </div>
 
       {/* Content */}
