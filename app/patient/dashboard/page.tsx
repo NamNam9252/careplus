@@ -63,32 +63,7 @@ export default function PatientDashboard() {
     return (
         <main className="min-h-screen bg-[#FDFDFF] font-sans text-gray-900 pb-20">
             {/* Top Navbar */}
-            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
-                            <Activity className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="text-xl font-black tracking-tight text-gray-900">CarePlus</span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:block text-right">
-                            <p className="text-xs font-black text-gray-900 leading-none">{session?.user?.name}</p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Patient Account</p>
-                        </div>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => signOut({ callbackUrl: "/login" })}
-                            className="p-3 bg-gray-50 text-gray-400 hover:text-red-500 rounded-xl transition-colors"
-                        >
-                            <LogOut className="h-5 w-5" />
-                        </motion.button>
-                    </div>
-                </div>
-            </nav>
-
+            {/* Top Navbar Removed */}
             <div className="max-w-7xl mx-auto px-6 pt-12">
                 {/* Welcome Header */}
                 <div className="mb-12">

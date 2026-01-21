@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
-  IconBrandTabler,
-  IconUserBolt,
-  IconBuildingCommunity,
-  IconUsers,
-  IconLogout,
+  IconBuildingHospital,
+  IconStethoscope,
+  IconClock,
+  IconCalendar,
   IconVideo,
+  IconLogout,
+  IconUserBolt,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -16,42 +17,42 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
 
   const links = [
     {
-      label: "Dashboard",
-      href: "/doctor/dashboard",
+      label: "Find Clinic",
+      href: "/patient/dashboard",
       icon: (
-        <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconBuildingHospital className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
-      label: "Profile",
-      href: "/doctor/profile",
+      label: "Find Doctors",
+      href: "/patient/doctors",
       icon: (
-        <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconStethoscope className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
-      label: "Clinics",
-      href: "/doctor/clinics",
+      label: "Check Queue",
+      href: "/patient/my-queue",
       icon: (
-        <IconBuildingCommunity className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconClock className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
-      label: "Queue Management",
-      href: "/doctor/queue",
+      label: "Appointments",
+      href: "/patient/appointments",
       icon: (
-        <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconCalendar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
       label: "Online Consultancy",
-      href: "/doctor/consultation",
+      href: "/patient/consultation",
       icon: (
         <IconVideo className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -95,8 +96,8 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
           <div>
             <SidebarLink
               link={{
-                label: session?.user?.name || "Doctor",
-                href: "/doctor/profile",
+                label: session?.user?.name || "Patient",
+                href: "/patient/dashboard",
                 icon: (
                   <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
                 ),
