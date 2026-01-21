@@ -11,8 +11,8 @@ export async function GET(req: NextRequest) {
     try {
         await connectDB();
 
-        // Fetch all active clinics and populate doctor details
-        const clinics = await Clinic.find({ isActive: true })
+        // Fetch all clinics and populate doctor details
+        const clinics = await Clinic.find({})
             .populate("doctorId", "name specializations experience")
             .sort({ createdAt: -1 });
 

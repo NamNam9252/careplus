@@ -61,7 +61,12 @@ export const FeaturesSection = ({ onAuthAction }: { onAuthAction: () => void }) 
                  <h3 className="text-2xl font-bold text-white">Clinic Locator & Maps</h3>
               </div>
               <p className="text-neutral-400 mb-6">Find the nearest clinics and specialists with integrated maps. Get directions and check facility timings instantly.</p>
-              <Button variant="outline" className="text-sm py-2">Find Clinics Nearby</Button>
+               <a 
+                 href="/public/clinics"
+                 className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md"
+               >
+                 Find Clinics Nearby
+               </a>
            </div>
            
            {/* Map Mockup Container */}

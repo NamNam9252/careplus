@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Calendar, Video, Users, Star, Bell, MoreHorizontal, User, Home as HomeIcon, Layout, Clock, Settings, CheckCircle2, Zap, MapPin } from 'lucide-react';
+import { Calendar, Video, Users, Star, Bell, MoreHorizontal, User, Home as HomeIcon, Layout, Clock, Settings, CheckCircle2, Zap, MapPin, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button'; 
 import { HERO_CONTENT } from './constants';
 
@@ -55,6 +55,13 @@ export const HeroSection = ({ onAuthAction }: { onAuthAction: () => void }) => {
                 <Video className="mr-2 w-5 h-5 text-neutral-400" />
                 Consult Online
               </Button>
+              <a 
+                href="/public/doctors"
+                className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-neutral-700 hover:bg-neutral-800 h-10 px-4 py-2 rounded-md"
+              >
+                <Stethoscope className="mr-2 w-5 h-5 text-neutral-400" />
+                Find a Doctor
+              </a>
             </div>
 
             {/* Social Proof Mini-section */}

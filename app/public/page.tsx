@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
@@ -19,10 +19,16 @@ import {
 
 export default function PublicPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [clinics, setClinics] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchType, setSearchType] = useState<'clinics' | 'doctors'>('clinics');
+
+    // Read initial tab from query param
+    const tabParam = searchParams.get("tab");
+    const [searchType, setSearchType] = useState<'clinics' | 'doctors'>(
+        tabParam === 'doctors' ? 'doctors' : 'clinics'
+    );
 
     const [doctors, setDoctors] = useState<any[]>([]);
 

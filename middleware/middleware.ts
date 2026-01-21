@@ -23,6 +23,8 @@ export async function middleware(req: NextRequest) {
         "/login",
         "/api/auth", // Unified auth base path
         "/api/v1",   // Public APIs
+        "/api/public", // Public page APIs (clinics, doctors)
+        "/api/doctor/list", // Doctor list for public page
     ];
 
     const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));

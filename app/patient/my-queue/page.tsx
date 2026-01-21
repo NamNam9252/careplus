@@ -71,8 +71,8 @@ export default function MyQueuePage() {
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 mb-2">Not in any Queue</h2>
                         <p className="text-gray-500 mb-8 max-w-sm">You are not currently waiting in any clinic queue. Join a queue to track your status here.</p>
-                        <a href="/patient/doctors" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
-                            Find a Doctor
+                        <a href="/patient/dashboard" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
+                            Find a Clinic
                         </a>
                     </div>
                 ) : (

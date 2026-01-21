@@ -56,6 +56,13 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         <IconVideo className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
+    {
+      label: "Reports",
+      href: "/doctor/report",
+      icon: (
+        <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
   ];
 
   const handleLogout = (e: React.MouseEvent) => {

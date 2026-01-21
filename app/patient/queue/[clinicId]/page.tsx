@@ -85,13 +85,25 @@ export default function PatientQueueTracker() {
 
     // Find this patient in the queue
     // Note: Using session ID or name for identification
+    // Find this patient in the queue
+    // Prioritize active, then finished (though we mostly care about active to show status)
+    // If only finished exists, we want to allow re-joining (so return null effectively? or Handle in UI?)
+    // Actually, if we return the active one, UI shows status.
+    // If we return undefined (no active one), UI shows "Join". 
+    // This allows re-joining.
     const myEntry = queue?.patients?.find((p: any) =>
-        p.patientId === session?.user?.id ||
-        (p.patientId.startsWith('sim-') && p.patientName === session?.user?.name)
+        (p.patientId === session?.user?.id || (p.patientId.startsWith('sim-') && p.patientName === session?.user?.name)) &&
+        ["waiting", "in-consultation"].includes(p.status)
     );
 
     const waitingCount = queue?.patients?.filter((p: any) => p.status === "waiting").length || 0;
     const inConsultation = queue?.patients?.find((p: any) => p.status === "in-consultation");
+
+    // Calculate patients ahead: count active patients (waiting or in-consultation) with lower position
+    const patientsAhead = myEntry ? queue?.patients?.filter((p: any) => 
+        ["waiting", "in-consultation"].includes(p.status) && 
+        p.position < myEntry.position
+    ).length || 0 : 0;
 
     return (
         <main className="min-h-screen bg-[#FDFDFF] p-6 font-sans">
@@ -194,12 +206,12 @@ export default function PatientQueueTracker() {
                                     <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
                                         <Users className="h-5 w-5 text-gray-400 mb-2" />
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Patients Ahead</p>
-                                        <p className="text-xl font-black text-gray-900">{Math.max(0, myEntry.position - 1)}</p>
+                                        <p className="text-xl font-black text-gray-900">{patientsAhead}</p>
                                     </div>
                                     <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
                                         <Clock className="h-5 w-5 text-gray-400 mb-2" />
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Est. Wait Time</p>
-                                        <p className="text-xl font-black text-gray-900">~{Math.max(0, (myEntry.position - 1) * 15)} mins</p>
+                                        <p className="text-xl font-black text-gray-900">~{patientsAhead * 15} mins</p>
                                     </div>
                                 </div>
                             )}

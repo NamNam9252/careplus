@@ -44,17 +44,17 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       ),
     },
     {
-      label: "Appointments",
-      href: "/patient/appointments",
-      icon: (
-        <IconCalendar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
-    {
       label: "Online Consultancy",
       href: "/patient/consultation",
       icon: (
         <IconVideo className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Appointments",
+      href: "/patient/appointments",
+      icon: (
+        <IconCalendar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
   ];

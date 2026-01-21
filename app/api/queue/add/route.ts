@@ -39,8 +39,13 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        const alreadyIn = queue.patients.find((p: any) => p.patientId.toString() === patientId);
-        if (alreadyIn && alreadyIn.status !== "finished") {
+        // Check if patient is already in the queue with an active status
+        const activeEntry = queue.patients.find((p: any) => 
+            p.patientId.toString() === patientId && 
+            ["waiting", "in-consultation"].includes(p.status)
+        );
+
+        if (activeEntry) {
             return NextResponse.json({ error: "Already in queue" }, { status: 400 });
         }
 
