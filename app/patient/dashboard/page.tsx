@@ -32,7 +32,7 @@ export default function PatientDashboard() {
 
     const fetchClinics = async () => {
         try {
-            const res = await fetch("/api/v1/clinic/all");
+            const res = await fetch("/api/public/clinics");
             if (res.ok) {
                 const data = await res.json();
                 setClinics(data.clinics);

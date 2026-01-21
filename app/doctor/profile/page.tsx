@@ -36,7 +36,7 @@ export default function DoctorProfilePage() {
 
     const fetchDoctorProfile = async () => {
         try {
-            const res = await fetch(`/api/v1/doctor/profile?id=${session?.user?.id}`);
+            const res = await fetch(`/api/doctor/profile?id=${session?.user?.id}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.doctor) {
@@ -55,7 +55,7 @@ export default function DoctorProfilePage() {
 
     const fetchClinics = async () => {
         try {
-            const res = await fetch("/api/v1/clinic");
+            const res = await fetch("/api/doctor/clinic");
             if (res.ok) {
                 const data = await res.json();
                 setClinics(data.clinics);
@@ -79,7 +79,7 @@ export default function DoctorProfilePage() {
         }
 
         try {
-            const response = await fetch("/api/v1/doctor/profile", {
+            const response = await fetch("/api/doctor/profile/edit", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

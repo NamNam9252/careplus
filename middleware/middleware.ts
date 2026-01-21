@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
         "/api/auth", // Unified auth base path
         "/api/v1",   // Public APIs
     ];
-    
+
     const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
     const isApiRoute = pathname.startsWith("/api");
 

@@ -46,6 +46,8 @@ export default function DoctorDashboard() {
 
     // Chart period selector
     const [chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'year'>('week');
+    const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
     // Load banner settings from localStorage
     useEffect(() => {
@@ -68,9 +70,11 @@ export default function DoctorDashboard() {
     };
 
     useEffect(() => {
-        if (status === "authenticated") {
+        if (status === "unauthenticated") {
+            router.push("/login");
+        } else if (status === "authenticated") {
             const initialFetch = () => {
-                fetch("/api/v1/clinic")
+                fetch("/api/doctor/clinic")
                     .then(res => res.ok ? res.json() : null)
                     .then(data => {
                         if (data && data.clinics) {
@@ -89,12 +93,12 @@ export default function DoctorDashboard() {
 
             return () => clearInterval(interval);
         }
-    }, [status, clinics.length]);
+    }, [status, clinics.length, router]);
 
     const fetchQueue = async (clinicId: string) => {
         setLoadingQueues(prev => ({ ...prev, [clinicId]: true }));
         try {
-            const res = await fetch(`/api/v1/queue?clinicId=${clinicId}`);
+            const res = await fetch(`/api/queue?clinicId=${clinicId}`);
             if (res.ok) {
                 const data = await res.json();
                 setQueues(prev => ({ ...prev, [clinicId]: data }));
@@ -107,10 +111,32 @@ export default function DoctorDashboard() {
         }
     };
 
+    // Fetch analytics data
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            setAnalyticsLoading(true);
+            try {
+                const res = await fetch(`/api/doctor/analytics?period=${chartPeriod}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setAnalyticsData(data.data || []);
+                }
+            } catch (err) {
+                console.error("Error fetching analytics:", err);
+            } finally {
+                setAnalyticsLoading(false);
+            }
+        };
+
+        if (status === "authenticated") {
+            fetchAnalytics();
+        }
+    }, [chartPeriod, status]);
+
     const manageQueue = async (clinicId: string, action: string, queueItemId?: string) => {
         try {
-            const res = await fetch("/api/v1/queue", {
-                method: "POST",
+            const res = await fetch("/api/queue/update", {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ clinicId, action, queueItemId }),
             });
@@ -126,71 +152,22 @@ export default function DoctorDashboard() {
         }
     };
 
-    // Calculate stats
     const totalPatientsToday = Object.values(queues).reduce((acc: number, q: any) => acc + (q?.patients?.length || 0), 0);
-    const totalRevenue = clinics.reduce((acc, c) => acc + (c.consultationFee || 0), 0) * totalPatientsToday;
+
+    // Calculate realized revenue (only finished consultations)
+    const totalRevenue = clinics.reduce((acc, clinic) => {
+        const queue = queues[clinic._id];
+        const finishedPatients = queue?.patients?.filter((p: any) => p.status === 'finished').length || 0;
+        return acc + (finishedPatients * (Number(clinic.consultationFee) || 0));
+    }, 0);
     const primaryCity = clinics[0]?.address?.city || "Not Set";
     const totalReviews = clinics.reduce((acc, c) => acc + (c.reviewsCount || 0), 0);
     const avgStars = clinics.length > 0
         ? (clinics.reduce((acc, c) => acc + (c.stars || 0), 0) / clinics.length).toFixed(1)
         : "0.0";
 
-    // Generate chart data based on period
-    // TODO: Replace with real API data when available
-    const generateChartData = () => {
-        const today = new Date();
-        const avgFee = clinics.length > 0 
-            ? clinics.reduce((acc, c) => acc + (c.consultationFee || 500), 0) / clinics.length 
-            : 500;
-        
-        if (chartPeriod === 'week') {
-            // Last 7 days
-            return Array.from({ length: 7 }, (_, i) => {
-                const date = new Date(today);
-                date.setDate(date.getDate() - (6 - i));
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const multiplier = 0.5 + Math.random() * 1;
-                return {
-                    date: date.toISOString().split('T')[0],
-                    label: `${dayName} ${date.getDate()}`,
-                    patients: Math.max(1, Math.floor((totalPatientsToday || 5) * multiplier)),
-                    revenue: Math.floor(avgFee * Math.max(1, Math.floor((totalPatientsToday || 5) * multiplier))),
-                };
-            });
-        } else if (chartPeriod === 'month') {
-            // Last 4 weeks
-            return Array.from({ length: 4 }, (_, i) => {
-                const weekStart = new Date(today);
-                weekStart.setDate(weekStart.getDate() - (3 - i) * 7);
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekEnd.getDate() + 6);
-                const multiplier = 0.6 + Math.random() * 0.8;
-                return {
-                    date: weekStart.toISOString().split('T')[0],
-                    label: `Week ${i + 1}`,
-                    patients: Math.max(5, Math.floor((totalPatientsToday || 5) * 7 * multiplier)),
-                    revenue: Math.floor(avgFee * Math.max(5, Math.floor((totalPatientsToday || 5) * 7 * multiplier))),
-                };
-            });
-        } else {
-            // Last 12 months
-            return Array.from({ length: 12 }, (_, i) => {
-                const monthDate = new Date(today);
-                monthDate.setMonth(monthDate.getMonth() - (11 - i));
-                const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
-                const multiplier = 0.5 + Math.random() * 1;
-                return {
-                    date: monthDate.toISOString().split('T')[0].substring(0, 7),
-                    label: monthName,
-                    patients: Math.max(20, Math.floor((totalPatientsToday || 5) * 30 * multiplier)),
-                    revenue: Math.floor(avgFee * Math.max(20, Math.floor((totalPatientsToday || 5) * 30 * multiplier))),
-                };
-            });
-        }
-    };
-
-    const chartData = generateChartData();
+    // Use real analytics data
+    const chartData = analyticsData.length > 0 ? analyticsData : []; // Fallback empty
     const revenueData = chartData.map(d => ({ label: d.label, date: d.date, revenue: d.revenue }));
     const patientsData = chartData.map(d => ({ label: d.label, date: d.date, patients: d.patients }));
 
@@ -297,7 +274,7 @@ export default function DoctorDashboard() {
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => router.push("/doctor/profile/edit")}
+                            onClick={() => router.push("/doctor/profile")}
                             className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-all"
                         >
                             <Pencil className="h-4 w-4" />
@@ -359,11 +336,10 @@ export default function DoctorDashboard() {
                             <button
                                 key={period}
                                 onClick={() => setChartPeriod(period)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${
-                                    chartPeriod === period
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${chartPeriod === period
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 {period}
                             </button>
@@ -378,21 +354,21 @@ export default function DoctorDashboard() {
                         <ResponsiveContainer width="100%" height={220}>
                             <LineChart data={revenueData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                <XAxis 
-                                    dataKey="label" 
-                                    tick={{ fontSize: 11 }} 
+                                <XAxis
+                                    dataKey="label"
+                                    tick={{ fontSize: 11 }}
                                     stroke="#9ca3af"
                                     interval={chartPeriod === 'year' ? 0 : 'preserveStartEnd'}
                                 />
-                                <YAxis 
-                                    tick={{ fontSize: 11 }} 
+                                <YAxis
+                                    tick={{ fontSize: 11 }}
                                     stroke="#9ca3af"
                                     tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '12px' }}
                                     labelFormatter={(label) => `Date: ${label}`}
-                                    formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                                    formatter={(value: any) => [`₹${(value || 0).toLocaleString()}`, 'Revenue']}
                                 />
                                 <Line
                                     type="monotone"
@@ -412,9 +388,9 @@ export default function DoctorDashboard() {
                         <ResponsiveContainer width="100%" height={220}>
                             <BarChart data={patientsData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                <XAxis 
-                                    dataKey="label" 
-                                    tick={{ fontSize: 11 }} 
+                                <XAxis
+                                    dataKey="label"
+                                    tick={{ fontSize: 11 }}
                                     stroke="#9ca3af"
                                     interval={chartPeriod === 'year' ? 0 : 'preserveStartEnd'}
                                 />
@@ -422,7 +398,7 @@ export default function DoctorDashboard() {
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '12px' }}
                                     labelFormatter={(label) => `Date: ${label}`}
-                                    formatter={(value: number) => [value, 'Patients']}
+                                    formatter={(value: any) => [value || 0, 'Patients']}
                                 />
                                 <Bar
                                     dataKey="patients"
@@ -500,73 +476,75 @@ export default function DoctorDashboard() {
                                 {/* Queue List */}
                                 <div className="p-6 bg-gray-50/50 max-h-[300px] overflow-y-auto custom-scrollbar">
                                     <AnimatePresence mode="popLayout">
-                                        {queues[clinic._id]?.patients?.length > 0 ? (
+                                        {queues[clinic._id]?.patients?.filter((p: any) => p.status !== 'finished' && p.status !== 'cancelled').length > 0 ? (
                                             <div className="space-y-3">
-                                                {queues[clinic._id].patients.map((item: any, idx: number) => {
-                                                    const isNext = item.status === 'waiting' &&
-                                                        !queues[clinic._id].patients.some((p: any) => p.status === 'in-consultation') &&
-                                                        idx === 0;
-                                                    const isInConsultation = item.status === 'in-consultation';
+                                                {queues[clinic._id].patients
+                                                    .filter((p: any) => p.status !== 'finished' && p.status !== 'cancelled')
+                                                    .map((item: any, idx: number) => {
+                                                        const isNext = item.status === 'waiting' &&
+                                                            !queues[clinic._id].patients.some((p: any) => p.status === 'in-consultation') &&
+                                                            idx === 0;
+                                                        const isInConsultation = item.status === 'in-consultation';
 
-                                                    return (
-                                                        <motion.div
-                                                            key={item._id}
-                                                            layout
-                                                            initial={{ opacity: 0, y: 5 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, x: -10 }}
-                                                            className={`p-4 rounded-2xl border flex items-center justify-between ${isInConsultation
-                                                                ? 'bg-emerald-50 border-emerald-200'
-                                                                : isNext
-                                                                    ? 'bg-blue-50 border-blue-200'
-                                                                    : 'bg-white border-gray-100'
-                                                                }`}
-                                                        >
-                                                            <div className="flex items-center gap-4">
-                                                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm ${isInConsultation
-                                                                    ? 'bg-emerald-600 text-white'
-                                                                    : 'bg-gray-900 text-white'
-                                                                    }`}>
-                                                                    {item.position}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="font-bold text-gray-900">{item.patientName}</span>
-                                                                        {isNext && (
-                                                                            <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Next</span>
-                                                                        )}
-                                                                        {isInConsultation && (
-                                                                            <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">Live</span>
-                                                                        )}
+                                                        return (
+                                                            <motion.div
+                                                                key={item._id}
+                                                                layout
+                                                                initial={{ opacity: 0, y: 5 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{ opacity: 0, x: -10 }}
+                                                                className={`p-4 rounded-2xl border flex items-center justify-between ${isInConsultation
+                                                                    ? 'bg-emerald-50 border-emerald-200'
+                                                                    : isNext
+                                                                        ? 'bg-blue-50 border-blue-200'
+                                                                        : 'bg-white border-gray-100'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm ${isInConsultation
+                                                                        ? 'bg-emerald-600 text-white'
+                                                                        : 'bg-gray-900 text-white'
+                                                                        }`}>
+                                                                        {item.position}
                                                                     </div>
-                                                                    <span className="text-xs text-gray-400">
-                                                                        Joined {new Date(item.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                    </span>
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="font-bold text-gray-900">{item.patientName}</span>
+                                                                            {isNext && (
+                                                                                <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Next</span>
+                                                                            )}
+                                                                            {isInConsultation && (
+                                                                                <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">Live</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-xs text-gray-400">
+                                                                            Joined {new Date(item.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            {item.status === 'waiting' ? (
-                                                                <motion.button
-                                                                    whileHover={{ scale: 1.05 }}
-                                                                    whileTap={{ scale: 0.95 }}
-                                                                    onClick={() => manageQueue(clinic._id, "start-consultation", item._id)}
-                                                                    className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-blue-600 transition-all"
-                                                                >
-                                                                    Start
-                                                                </motion.button>
-                                                            ) : (
-                                                                <motion.button
-                                                                    whileHover={{ scale: 1.05 }}
-                                                                    whileTap={{ scale: 0.95 }}
-                                                                    onClick={() => manageQueue(clinic._id, "finish", item._id)}
-                                                                    className="flex items-center gap-1 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all"
-                                                                >
-                                                                    <CheckCircle className="h-3 w-3" />
-                                                                    Finish
-                                                                </motion.button>
-                                                            )}
-                                                        </motion.div>
-                                                    );
-                                                })}
+                                                                {item.status === 'waiting' ? (
+                                                                    <motion.button
+                                                                        whileHover={{ scale: 1.05 }}
+                                                                        whileTap={{ scale: 0.95 }}
+                                                                        onClick={() => manageQueue(clinic._id, "start-consultation", item._id)}
+                                                                        className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-blue-600 transition-all"
+                                                                    >
+                                                                        Start
+                                                                    </motion.button>
+                                                                ) : (
+                                                                    <motion.button
+                                                                        whileHover={{ scale: 1.05 }}
+                                                                        whileTap={{ scale: 0.95 }}
+                                                                        onClick={() => manageQueue(clinic._id, "finish", item._id)}
+                                                                        className="flex items-center gap-1 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all"
+                                                                    >
+                                                                        <CheckCircle className="h-3 w-3" />
+                                                                        Finish
+                                                                    </motion.button>
+                                                                )}
+                                                            </motion.div>
+                                                        );
+                                                    })}
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-10 text-center">

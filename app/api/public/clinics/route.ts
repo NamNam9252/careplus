@@ -6,7 +6,7 @@ import Clinic from "@/lib/models/Clinic";
 export async function GET() {
     try {
         await connectDB();
-        const clinics = await Clinic.find({ isActive: true }).select("clinicName _id address");
+        const clinics = await Clinic.find({ isActive: true }).select("clinicName _id address contactNumber timing facilities consultationFee stars reviewsCount");
         return NextResponse.json({ clinics });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

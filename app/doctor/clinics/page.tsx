@@ -41,7 +41,7 @@ export default function DoctorClinicsPage() {
     const fetchClinics = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/v1/clinic");
+            const res = await fetch("/api/doctor/clinic");
             if (res.ok) {
                 const data = await res.json();
                 setClinics(data.clinics || []);
@@ -113,7 +113,11 @@ export default function DoctorClinicsPage() {
         if (!confirm("Are you sure you want to delete this clinic? This action cannot be undone.")) return;
 
         try {
-            const res = await fetch(`/api/v1/clinic/${clinicId}`, { method: "DELETE" });
+            const res = await fetch("/api/doctor/clinic/delete", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clinicId })
+            });
             if (res.ok) {
                 setSuccess("Clinic deleted successfully!");
                 fetchClinics();
@@ -133,19 +137,23 @@ export default function DoctorClinicsPage() {
         setSuccess("");
 
         try {
-            const url = editingClinic ? `/api/v1/clinic/${editingClinic._id}` : "/api/v1/clinic";
+            const url = editingClinic ? "/api/doctor/clinic/edit" : "/api/doctor/clinic/create";
             const method = editingClinic ? "PUT" : "POST";
+
+            const clinicData = {
+                ...formData,
+                facilities: formData.facilities.split(",").map((f) => f.trim()).filter((f) => f !== ""),
+                consultationFee: parseFloat(formData.consultationFee) || 0,
+                stars: parseFloat(formData.stars) || 0,
+                reviewsCount: parseInt(formData.reviewsCount) || 0,
+            };
+
+            const body = editingClinic ? { ...clinicData, clinicId: editingClinic._id } : clinicData;
 
             const res = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...formData,
-                    facilities: formData.facilities.split(",").map((f) => f.trim()).filter((f) => f !== ""),
-                    consultationFee: parseFloat(formData.consultationFee) || 0,
-                    stars: parseFloat(formData.stars) || 0,
-                    reviewsCount: parseInt(formData.reviewsCount) || 0,
-                }),
+                body: JSON.stringify(body),
             });
 
             if (!res.ok) throw new Error(`Failed to ${editingClinic ? "update" : "add"} clinic`);
@@ -363,11 +371,10 @@ export default function DoctorClinicsPage() {
                                                     key={day}
                                                     type="button"
                                                     onClick={() => toggleDay(day)}
-                                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                                                        formData.timing.days.includes(day)
-                                                            ? "bg-blue-600 text-white"
-                                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                                    }`}
+                                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${formData.timing.days.includes(day)
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                        }`}
                                                 >
                                                     {day.substring(0, 3)}
                                                 </button>

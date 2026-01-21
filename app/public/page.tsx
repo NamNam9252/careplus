@@ -24,23 +24,29 @@ export default function PublicPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchType, setSearchType] = useState<'clinics' | 'doctors'>('clinics');
 
-    // Mock Doctor Data
-    const doctors = [
-        { id: 1, name: "Dr. Sarah Smith", specialty: "Cardiologist", clinic: "CarePlus Heart Center", rating: 4.9, location: "New York, USA", image: "S" },
-        { id: 2, name: "Dr. John Doe", specialty: "Dermatologist", clinic: "Skin Care Clinic", rating: 4.7, location: "New York, USA", image: "J" },
-        { id: 3, name: "Dr. Emily White", specialty: "Pediatrician", clinic: "Happy Kids Clinic", rating: 4.8, location: "New York, USA", image: "E" },
-        { id: 4, name: "Dr. Michael Brown", specialty: "Neurologist", clinic: "Brain Health Inst.", rating: 4.9, location: "Boston, USA", image: "M" },
-        { id: 5, name: "Dr. Lisa Ray", specialty: "Orthopedic", clinic: "Bone & Joint Clinic", rating: 4.6, location: "Chicago, USA", image: "L" },
-        { id: 6, name: "Dr. David Green", specialty: "General Physician", clinic: "City Health Center", rating: 4.8, location: "Miami, USA", image: "D" },
-    ];
+    const [doctors, setDoctors] = useState<any[]>([]);
 
     useEffect(() => {
         fetchClinics();
+        fetchDoctors();
     }, []);
 
+    const fetchDoctors = async () => {
+        try {
+            const res = await fetch("/api/doctor/list");
+            if (res.ok) {
+                const data = await res.json();
+                if (data.doctors) setDoctors(data.doctors);
+            }
+        } catch (err) {
+            console.error("Error fetching doctors:", err);
+        }
+    };
+
+    // Clinics fetch handled in useEffect above
     const fetchClinics = async () => {
         try {
-            const res = await fetch("/api/v1/clinic/all");
+            const res = await fetch("/api/public/clinics");
             if (res.ok) {
                 const data = await res.json();
                 setClinics(data.clinics);
@@ -57,7 +63,7 @@ export default function PublicPage() {
         clinic.address.city.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredDoctors = doctors.filter(doctor => 
+    const filteredDoctors = doctors.filter(doctor =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.clinic.toLowerCase().includes(searchQuery.toLowerCase())
@@ -105,8 +111,8 @@ export default function PublicPage() {
                         animate={{ opacity: 1, x: 0 }}
                         className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-6"
                     >
-                         Find your perfect <br />
-                         <span className="text-blue-600">{searchType === 'clinics' ? 'Clinic' : 'Doctor'}</span> today.
+                        Find your perfect <br />
+                        <span className="text-blue-600">{searchType === 'clinics' ? 'Clinic' : 'Doctor'}</span> today.
                     </motion.h1>
 
                     {/* Toggle Switch */}
@@ -172,7 +178,7 @@ export default function PublicPage() {
 
                 <AnimatePresence mode="wait">
                     {searchType === 'clinics' ? (
-                        <motion.div 
+                        <motion.div
                             key="clinics-grid"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -230,14 +236,14 @@ export default function PublicPage() {
                             </div>
                         </motion.div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="doctors-grid"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-6"
                         >
-                             <div className="flex items-center justify-between ml-2">
+                            <div className="flex items-center justify-between ml-2">
                                 <h2 className="text-2xl font-black text-gray-900 tracking-tight">Top Specialists</h2>
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{filteredDoctors.length} Found</span>
                             </div>
@@ -281,7 +287,7 @@ export default function PublicPage() {
                                             </div>
                                         </div>
 
-                                         <button className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors cursor-pointer" onClick={() => router.push("/login")}>
+                                        <button className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors cursor-pointer" onClick={() => router.push("/login")}>
                                             Book Appointment
                                         </button>
                                     </motion.div>

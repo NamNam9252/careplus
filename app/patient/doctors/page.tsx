@@ -11,14 +11,14 @@ export default function FindDoctorsPage() {
     const router = useRouter();
     const [doctors, setDoctors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Booking Modal State
     const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
     const [bookingDate, setBookingDate] = useState<string>("");
     const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
     const [bookingReason, setBookingReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [notification, setNotification] = useState<{message: string, type: 'success'|'error'} | null>(null);
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
         fetch("/api/doctors")
@@ -38,11 +38,11 @@ export default function FindDoctorsPage() {
         if (!selectedDoctor || !bookingDate) return [];
         // In a real app, you would fetch "available" slots from the backend that accounts for existing bookings.
         // For this demo, we verify against the doctor's general availability (e.g., 9-5)
-        
+
         const startTime = parseInt(selectedDoctor.availability?.startTime?.split(':')[0] || "9");
         const endTime = parseInt(selectedDoctor.availability?.endTime?.split(':')[0] || "17");
         const slots = [];
-        
+
         for (let i = startTime; i < endTime; i++) {
             slots.push(`${i.toString().padStart(2, '0')}:00`);
             slots.push(`${i.toString().padStart(2, '0')}:30`);
@@ -52,36 +52,36 @@ export default function FindDoctorsPage() {
 
     const handleBookAppointment = async () => {
         if (!selectedDoctor || !selectedSlot || !bookingDate || !session?.user) return;
-        
+
         setIsSubmitting(true);
         try {
-             // Construct Date Object (Naive construction, ideally use a library like dayjs)
-             const dateTimeString = `${bookingDate}T${selectedSlot}:00`;
-             const slotTime = new Date(dateTimeString); // This will pick up local browser time
+            // Construct Date Object (Naive construction, ideally use a library like dayjs)
+            const dateTimeString = `${bookingDate}T${selectedSlot}:00`;
+            const slotTime = new Date(dateTimeString); // This will pick up local browser time
 
-             const res = await fetch("/api/appointments/request", {
-                 method: "POST",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify({
-                     doctorId: selectedDoctor._id,
-                     patientId: (session.user as any).id, // Assuming session has ID, if not you might need to fetch profile first
-                     slotTime: slotTime.toISOString(),
-                     reason: bookingReason || "General Consultation"
-                 })
-             });
+            const res = await fetch("/api/appointments/request", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    doctorId: selectedDoctor._id,
+                    patientId: (session.user as any).id, // Assuming session has ID, if not you might need to fetch profile first
+                    slotTime: slotTime.toISOString(),
+                    reason: bookingReason || "General Consultation"
+                })
+            });
 
-             const data = await res.json();
-             
-             if (res.ok) {
-                 setNotification({ message: "Request Sent! Waiting for Doctor approval.", type: 'success' });
-                 setTimeout(() => {
-                     setSelectedDoctor(null);
-                     setNotification(null);
-                     // router.push("/patient/consultation"); 
-                 }, 2000);
-             } else {
-                 setNotification({ message: data.error || "Booking Failed", type: 'error' });
-             }
+            const data = await res.json();
+
+            if (res.ok) {
+                setNotification({ message: "Request Sent! Waiting for Doctor approval.", type: 'success' });
+                setTimeout(() => {
+                    setSelectedDoctor(null);
+                    setNotification(null);
+                    // router.push("/patient/consultation"); 
+                }, 2000);
+            } else {
+                setNotification({ message: data.error || "Booking Failed", type: 'error' });
+            }
 
         } catch (error) {
             setNotification({ message: "Network Error", type: 'error' });
@@ -92,7 +92,7 @@ export default function FindDoctorsPage() {
 
     return (
         <main className="min-h-screen bg-[#FDFDFF] p-6 md:p-8">
-             <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">Find Doctors</h1>
                     <p className="text-gray-500 mt-1">Connect with top specialists for your health needs</p>
@@ -100,7 +100,7 @@ export default function FindDoctorsPage() {
 
                 {loading ? (
                     <div className="flex justify-center p-12">
-                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-600 border-gray-200"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-600 border-gray-200"></div>
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -136,7 +136,7 @@ export default function FindDoctorsPage() {
                                     </div>
                                 </div>
 
-                                <button 
+                                <button
                                     onClick={() => setSelectedDoctor(doctor)}
                                     className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors"
                                 >
@@ -146,13 +146,13 @@ export default function FindDoctorsPage() {
                         ))}
                     </div>
                 )}
-             </div>
+            </div>
 
-             {/* Booking Modal */}
-             <AnimatePresence>
+            {/* Booking Modal */}
+            <AnimatePresence>
                 {selectedDoctor && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
@@ -164,7 +164,7 @@ export default function FindDoctorsPage() {
                                     <X className="h-5 w-5 text-gray-500" />
                                 </button>
                             </div>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">Doctor</label>
@@ -178,8 +178,8 @@ export default function FindDoctorsPage() {
 
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">Select Date</label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                         onChange={(e) => setBookingDate(e.target.value)}
                                         min={new Date().toISOString().split('T')[0]}
@@ -194,11 +194,10 @@ export default function FindDoctorsPage() {
                                                 <button
                                                     key={slot}
                                                     onClick={() => setSelectedSlot(slot)}
-                                                    className={`py-2 rounded-lg text-xs font-bold transition-all ${
-                                                        selectedSlot === slot 
-                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                    }`}
+                                                    className={`py-2 rounded-lg text-xs font-bold transition-all ${selectedSlot === slot
+                                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        }`}
                                                 >
                                                     {slot}
                                                 </button>
@@ -206,10 +205,10 @@ export default function FindDoctorsPage() {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">Reason</label>
-                                    <textarea 
+                                    <textarea
                                         className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
                                         placeholder="Briefly describe your issue..."
                                         value={bookingReason}
@@ -218,22 +217,20 @@ export default function FindDoctorsPage() {
                                 </div>
 
                                 {notification && (
-                                    <div className={`p-4 rounded-xl flex items-center gap-2 text-sm font-bold ${
-                                        notification.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                                    }`}>
-                                        {notification.type === 'success' ? <CheckCircle className="h-4 w-4"/> : <AlertCircle className="h-4 w-4"/>}
+                                    <div className={`p-4 rounded-xl flex items-center gap-2 text-sm font-bold ${notification.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                                        }`}>
+                                        {notification.type === 'success' ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                                         {notification.message}
                                     </div>
                                 )}
 
-                                <button 
+                                <button
                                     onClick={handleBookAppointment}
                                     disabled={!selectedSlot || !bookingDate || isSubmitting}
-                                    className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-                                        !selectedSlot || !bookingDate 
-                                        ? 'bg-gray-300 cursor-not-allowed' 
-                                        : 'bg-gray-900 hover:bg-black shadow-lg'
-                                    }`}
+                                    className={`w-full py-4 rounded-xl font-bold text-white transition-all ${!selectedSlot || !bookingDate
+                                            ? 'bg-gray-300 cursor-not-allowed'
+                                            : 'bg-gray-900 hover:bg-black shadow-lg'
+                                        }`}
                                 >
                                     {isSubmitting ? "Processing..." : "Confirm Booking"}
                                 </button>
@@ -241,7 +238,7 @@ export default function FindDoctorsPage() {
                         </motion.div>
                     </div>
                 )}
-             </AnimatePresence>
+            </AnimatePresence>
         </main>
     );
 }

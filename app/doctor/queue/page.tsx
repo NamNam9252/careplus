@@ -32,7 +32,7 @@ export default function QueueManagementPage() {
     // Fetch clinics and auto-select the first one
     const fetchClinics = async () => {
         try {
-            const res = await fetch("/api/v1/clinic");
+            const res = await fetch("/api/doctor/clinic");
             if (res.ok) {
                 const data = await res.json();
                 if (data.clinics && data.clinics.length > 0) {
@@ -57,7 +57,7 @@ export default function QueueManagementPage() {
     const fetchQueue = async (clinicId: string) => {
         setLoadingQueue(true);
         try {
-            const res = await fetch(`/api/v1/queue?clinicId=${clinicId}`);
+            const res = await fetch(`/api/queue?clinicId=${clinicId}`);
             if (res.ok) {
                 const data = await res.json();
                 setQueueData(data);
@@ -72,8 +72,8 @@ export default function QueueManagementPage() {
     const manageQueue = async (action: string, queueItemId?: string) => {
         if (!selectedClinicId) return;
         try {
-            const res = await fetch("/api/v1/queue", {
-                method: "POST",
+            const res = await fetch("/api/queue/update", {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ clinicId: selectedClinicId, action, queueItemId }),
             });
@@ -92,7 +92,7 @@ export default function QueueManagementPage() {
     const selectedClinic = clinics.find(c => c._id === selectedClinicId);
     const waitingPatients = queueData?.patients?.filter((p: any) => p.status === 'waiting') || [];
     const currentPatient = queueData?.patients?.find((p: any) => p.status === 'in-consultation');
-    const completedPatients = queueData?.patients?.filter((p: any) => p.status === 'completed') || [];
+    const completedPatients = queueData?.patients?.filter((p: any) => p.status === 'finished') || [];
 
     if (status === "loading") {
         return (
@@ -166,18 +166,18 @@ export default function QueueManagementPage() {
                                 {/* Current Patient Card */}
                                 <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white shadow-xl flex flex-col justify-center items-center text-center relative overflow-hidden">
                                     <div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                                    
+
                                     <h3 className="text-blue-100 font-bold uppercase tracking-widest mb-6 relative z-10">Currently Consulting</h3>
-                                    
+
                                     {currentPatient ? (
                                         <div className="relative z-10 w-full">
                                             <div className="h-24 w-24 bg-white/20 backdrop-blur-md rounded-full mx-auto flex items-center justify-center text-3xl font-black mb-4 border border-white/30">
                                                 {currentPatient.position}
                                             </div>
                                             <h2 className="text-3xl font-black mb-2">{currentPatient.patientName}</h2>
-                                            <p className="text-blue-200 mb-8">Started {new Date(currentPatient.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                                            
-                                            <button 
+                                            <p className="text-blue-200 mb-8">Started {new Date(currentPatient.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+
+                                            <button
                                                 onClick={() => manageQueue("finish", currentPatient._id)}
                                                 className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg"
                                             >
@@ -199,14 +199,14 @@ export default function QueueManagementPage() {
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                                         <h3 className="font-bold text-gray-900">Waiting Queue</h3>
-                                        <button 
+                                        <button
                                             onClick={() => selectedClinicId && fetchQueue(selectedClinicId)}
                                             className="p-2 hover:bg-gray-50 rounded-full"
                                         >
                                             <RefreshCw className={`h-4 w-4 text-gray-400 ${loadingQueue ? 'animate-spin' : ''}`} />
                                         </button>
                                     </div>
-                                    
+
                                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                         {waitingPatients.length === 0 ? (
                                             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -215,7 +215,7 @@ export default function QueueManagementPage() {
                                             </div>
                                         ) : (
                                             waitingPatients.map((patient: any, idx: number) => (
-                                                <motion.div 
+                                                <motion.div
                                                     key={patient._id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
@@ -228,13 +228,13 @@ export default function QueueManagementPage() {
                                                         <div>
                                                             <div className="font-bold text-gray-900">{patient.patientName}</div>
                                                             <div className="text-xs text-gray-400">
-                                                                Joined {new Date(patient.joinedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                                Joined {new Date(patient.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     {(!currentPatient && idx === 0) && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => manageQueue("start-consultation", patient._id)}
                                                             className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
                                                         >

@@ -1,0 +1,16 @@
+﻿D:\careplus\app\api\auth\[...nextauth]\route.ts
+D:\careplus\app\api\doctor\clinic\route.ts
+D:\careplus\app\api\doctor\clinic\create\route.ts
+D:\careplus\app\api\doctor\clinic\delete\route.ts
+D:\careplus\app\api\doctor\clinic\edit\route.ts
+D:\careplus\app\api\doctor\profile\route.ts
+D:\careplus\app\api\doctor\profile\delete\route.ts
+D:\careplus\app\api\doctor\profile\edit\route.ts
+D:\careplus\app\api\patient\profile\route.ts
+D:\careplus\app\api\patient\profile\delete\route.ts
+D:\careplus\app\api\patient\profile\edit\route.ts
+D:\careplus\app\api\public\clinics\route.ts
+D:\careplus\app\api\public\doctors\route.ts
+D:\careplus\app\api\queue\route.ts
+D:\careplus\app\api\queue\add\route.ts
+D:\careplus\app\api\queue\update\route.ts

@@ -19,7 +19,7 @@ export default function PatientQueueTracker() {
 
     const fetchQueue = async () => {
         try {
-            const res = await fetch(`/api/v1/queue?clinicId=${clinicId}`);
+            const res = await fetch(`/api/queue?clinicId=${clinicId}`);
             if (res.ok) {
                 const data = await res.json();
                 setQueue(data);
@@ -42,7 +42,7 @@ export default function PatientQueueTracker() {
 
         setJoining(true);
         try {
-            const res = await fetch("/api/v1/queue", {
+            const res = await fetch("/api/queue/add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -147,26 +147,41 @@ export default function PatientQueueTracker() {
                             className="space-y-6"
                         >
                             {/* Primary Position Card */}
-                            <div className={`rounded-[32px] p-8 shadow-2xl shadow-blue-100 border border-white relative overflow-hidden ${myEntry.status === 'in-consultation' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-blue-600 to-indigo-700'
+                            <div className={`rounded-[32px] p-8 shadow-2xl shadow-blue-100 border border-white relative overflow-hidden ${myEntry.status === 'in-consultation'
+                                ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+                                : myEntry.status === 'finished'
+                                    ? 'bg-gradient-to-br from-gray-700 to-gray-900'
+                                    : 'bg-gradient-to-br from-blue-600 to-indigo-700'
                                 }`}>
                                 {/* Decorative Circles */}
                                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
                                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-3xl" />
 
                                 <div className="relative text-center text-white">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-2">Your Position</p>
-                                    <h2 className="text-7xl font-black mb-4">#{myEntry.position}</h2>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-2">
+                                        {myEntry.status === 'finished' ? "Status" : "Your Position"}
+                                    </p>
+                                    <h2 className={`font-black mb-4 ${myEntry.status === 'finished' ? "text-4xl" : "text-7xl"}`}>
+                                        {myEntry.status === 'finished' ? "All Done!" : `#${myEntry.position}`}
+                                    </h2>
 
                                     <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl">
-                                        {myEntry.status === 'waiting' ? (
+                                        {myEntry.status === 'waiting' && (
                                             <>
                                                 <Clock className="h-4 w-4" />
                                                 <span className="text-sm font-bold">Currently Waiting</span>
                                             </>
-                                        ) : (
+                                        )}
+                                        {myEntry.status === 'in-consultation' && (
                                             <>
                                                 <CheckCircle2 className="h-4 w-4" />
                                                 <span className="text-sm font-bold">In-Consultation</span>
+                                            </>
+                                        )}
+                                        {myEntry.status === 'finished' && (
+                                            <>
+                                                <CheckCircle2 className="h-4 w-4" />
+                                                <span className="text-sm font-bold">Consultation Finished</span>
                                             </>
                                         )}
                                     </div>
@@ -174,18 +189,20 @@ export default function PatientQueueTracker() {
                             </div>
 
                             {/* Estimated Info */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                                    <Users className="h-5 w-5 text-gray-400 mb-2" />
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Patients Ahead</p>
-                                    <p className="text-xl font-black text-gray-900">{myEntry.position - 1}</p>
+                            {myEntry.status !== 'finished' && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                                        <Users className="h-5 w-5 text-gray-400 mb-2" />
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Patients Ahead</p>
+                                        <p className="text-xl font-black text-gray-900">{Math.max(0, myEntry.position - 1)}</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                                        <Clock className="h-5 w-5 text-gray-400 mb-2" />
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Est. Wait Time</p>
+                                        <p className="text-xl font-black text-gray-900">~{Math.max(0, (myEntry.position - 1) * 15)} mins</p>
+                                    </div>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                                    <Clock className="h-5 w-5 text-gray-400 mb-2" />
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Est. Wait Time</p>
-                                    <p className="text-xl font-black text-gray-900">~{(myEntry.position - 1) * 15} mins</p>
-                                </div>
-                            </div>
+                            )}
 
                             {/* Current Status Update */}
                             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
