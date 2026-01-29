@@ -14,9 +14,6 @@ import { cookies } from "next/headers";
  * The intended role cookie determines which account to use/create.
  */
 const handler = NextAuth({
-    // Required for Vercel/production: use NEXTAUTH_URL from env so callback URL is correct
-    trustHost: true,
-
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -209,7 +206,7 @@ const handler = NextAuth({
             name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.csrf-token`,
             options: {
                 httpOnly: true,
-                sameSite: "lax",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 path: "/",
                 secure: process.env.NODE_ENV === "production",
             },
@@ -218,7 +215,7 @@ const handler = NextAuth({
             name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.pkce`,
             options: {
                 httpOnly: true,
-                sameSite: "lax",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 path: "/",
                 secure: process.env.NODE_ENV === "production",
                 maxAge: 900,
@@ -228,7 +225,7 @@ const handler = NextAuth({
             name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}careplus.state`,
             options: {
                 httpOnly: true,
-                sameSite: "lax",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 path: "/",
                 secure: process.env.NODE_ENV === "production",
                 maxAge: 900,
