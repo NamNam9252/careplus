@@ -14,6 +14,9 @@ import { cookies } from "next/headers";
  * The intended role cookie determines which account to use/create.
  */
 const handler = NextAuth({
+    // Required for Vercel/production: use NEXTAUTH_URL from env so callback URL is correct
+    trustHost: true,
+
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
